@@ -1,4 +1,5 @@
 mod handlers;
+mod models;
 
 use std::sync::Arc;
 use axum::{
@@ -8,11 +9,8 @@ use axum::{
 };
 
 use std::net::SocketAddr;
-use handlers::auth::{
-    User,
-    AppState,
-    login_handle,
-};
+use handlers::auth:: login_handle;
+use models::user::{AppState, User};
 
 
 #[tokio::main]
