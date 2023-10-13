@@ -1,9 +1,12 @@
-use serde::Serialize;
+use std::error::Error;
+use serde::{Serialize, Deserialize};
 use jsonwebtoken::{
     encode,
     Header,
     Algorithm,
     EncodingKey,
+    DecodingKey,
+    Validation,
 };
 use std::sync::Arc;
 use axum::extract::{
@@ -24,13 +27,13 @@ pub struct LoginResponse {
     pub token: String,
 }
 
-#[derive(Serialize)]
-struct Claims {
+#[derive(Serialize, Deserialize)]
+pub struct Claims {
     user_id: String,
     username: String,
 }
 
-const JWT_KEY: &'static str =  "asdf";
+pub const JWT_KEY: &'static str =  "asdf";
 
 fn create_token(user_id: &str, username: &str, jwt_key: &str) -> Result<String, Box<dyn std::error::Error>> {
     let claims = Claims {
@@ -42,14 +45,23 @@ fn create_token(user_id: &str, username: &str, jwt_key: &str) -> Result<String, 
     Ok(encode(&header, &claims, &key)?)
 }
 
+pub fn validate_token(token: &str, jwt_key: &str) -> Result<Claims, Box<dyn Error>> {
+    let payload = jsonwebtoken::decode::<Claims>(
+            token,
+            &DecodingKey::from_secret(jwt_key.as_bytes()),
+            &Validation::new(Algorithm::HS256)
+        )?.claims;
+    return Ok(payload);
+}
+
 pub async fn login_handle(
         State(state): State<Arc<AppState>>, 
-        Json(loginPayload): Json<LoginPayload>,
+        Json(login_payload): Json<LoginPayload>,
     ) -> Result<Json<LoginResponse>, StatusCode> {
     let users_set = &state.users_set;
 
     if let Some(user) = users_set.get("1").cloned() {
-        if user.password != loginPayload.password {
+        if user.password != login_payload.password {
             return Err(StatusCode::UNAUTHORIZED)
         };
         let token = create_token(&user.id, &user.username, JWT_KEY)

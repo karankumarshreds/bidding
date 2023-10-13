@@ -1,5 +1,6 @@
 mod handlers;
 mod models;
+mod middlewares;
 
 use std::sync::Arc;
 use axum::{
