@@ -27,10 +27,11 @@ pub struct LoginResponse {
     pub token: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Claims {
     user_id: String,
     username: String,
+    exp: usize,
 }
 
 pub const JWT_KEY: &'static str =  "asdf";
@@ -39,6 +40,7 @@ fn create_token(user_id: &str, username: &str, jwt_key: &str) -> Result<String, 
     let claims = Claims {
         user_id: user_id.to_string(),
         username: username.to_string(),
+        exp: 10000000000,
     };
     let header = Header::new(Algorithm::HS256);
     let key = EncodingKey::from_secret(jwt_key.as_bytes());
@@ -71,3 +73,6 @@ pub async fn login_handle(
     return Err(StatusCode::UNAUTHORIZED)
 }
 
+pub async fn test_handler() -> Result<(), StatusCode> {
+    Ok(())
+}

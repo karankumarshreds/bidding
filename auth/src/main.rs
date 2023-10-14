@@ -6,12 +6,14 @@ use std::sync::Arc;
 use axum::{
     Router,
     Server,
-    routing::post
+    routing::{get, post},
+    middleware::from_fn,
 };
 
 use std::net::SocketAddr;
-use handlers::auth:: login_handle;
+use handlers::auth::{login_handle, test_handler};
 use models::user::{AppState, User};
+use middlewares::auth::with_auth;
 
 
 #[tokio::main]
@@ -24,6 +26,8 @@ async fn main() {
                                   
     let app = Router::new()
         .route("/login", post(login_handle))
+        .route("/test", get(test_handler))
+        .route_layer(from_fn(with_auth))
         .with_state(shared_state);
 
     let addr = SocketAddr::from(([127,0,0,1], 8000));
