@@ -9,12 +9,11 @@ use jsonwebtoken::{
     Validation,
 };
 use std::sync::Arc;
-use axum::extract::{
-    State,
-    Json,
-};
+// use axum::extract::{State, Json, Extension};
+use axum::extract::{State, Json};
+use axum::Extension;
 use axum::http::StatusCode;
-use crate::models::user::AppState;
+use crate::models::user::{AppState, User};
 
 #[derive(serde::Deserialize)]
 pub struct LoginPayload {
@@ -29,9 +28,9 @@ pub struct LoginResponse {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Claims {
-    user_id: String,
-    username: String,
-    exp: usize,
+    pub user_id: String,
+    pub username: String,
+    pub exp: usize,
 }
 
 pub const JWT_KEY: &'static str =  "asdf";
@@ -62,7 +61,9 @@ pub async fn login_handle(
     ) -> Result<Json<LoginResponse>, StatusCode> {
     let users_set = &state.users_set;
 
-    if let Some(user) = users_set.get("1").cloned() {
+    let user = User::get_user_by_username(login_payload.username.as_ref(), users_set)
+        .ok_or(StatusCode::UNAUTHORIZED)?;
+    if let Some(user) = users_set.get(&user.id).cloned() {
         if user.password != login_payload.password {
             return Err(StatusCode::UNAUTHORIZED)
         };
@@ -73,6 +74,13 @@ pub async fn login_handle(
     return Err(StatusCode::UNAUTHORIZED)
 }
 
-pub async fn test_handler() -> Result<(), StatusCode> {
-    Ok(())
+pub async fn who_am_i(
+        State(state): State<Arc<AppState>>,
+        Extension(claims): Extension<Arc<Claims>>,
+    ) -> Result<Json<User>, StatusCode> {
+    println!("got the claims {:#?}", claims);
+    let users_set = &state.users_set;
+    let user = users_set.get(&claims.user_id)
+        .ok_or(StatusCode::UNAUTHORIZED)?;
+    return Ok(Json(user.clone()));
 }

@@ -1,8 +1,12 @@
 use std::collections::HashMap;
 
+#[derive(Clone)]
 pub struct AppState {
     pub users_set: HashMap<String, User>,
 }
+
+type UserId = String;
+type UsersSet = HashMap<UserId, User>;
 
 #[derive(serde::Serialize, Clone, Debug)]
 pub struct User {
@@ -12,7 +16,7 @@ pub struct User {
 }
 
 impl User {
-    pub fn new() -> HashMap<String, User> {
+    pub fn new() -> UsersSet {
         return HashMap::from([
             (
                 String::from("1"), 
@@ -23,6 +27,14 @@ impl User {
                 }
             ),
         ])
+    }
+    pub fn get_user_by_username<'a>(username: &'a str, users_set: &'a UsersSet) -> Option<&'a Self> {
+        for (_, user) in users_set.iter() {
+            if user.username == username  {
+                return Some(user)
+            }
+        }
+        return None
     }
 }
 

@@ -1,13 +1,10 @@
-use crate::handlers::auth::{
-    validate_token,
-    JWT_KEY,
-};
+use std::sync::Arc;
+use crate::handlers::auth::validate_token;
 use axum::{
     http::{Request, header},
     response::Response,
     http::StatusCode,
     middleware::Next,
-    
 };
 
 pub async fn with_auth<B>(mut req: Request<B>, next: Next<B>) -> Result<Response, StatusCode> {
@@ -19,13 +16,18 @@ pub async fn with_auth<B>(mut req: Request<B>, next: Next<B>) -> Result<Response
         })
         .ok_or(StatusCode::UNAUTHORIZED)?;
 
-    println!("validating token with \n JWT KET: {} & AUTH_HEADER: {}" , JWT_KEY, auth_header);
-    let claims = validate_token(auth_header, JWT_KEY)
+    let claims = validate_token(auth_header, std::env::var("JWT_KEY").unwrap().as_ref())
         .map_err(|err|{
-            println!("what the fucccc {:#?}", err);
+            println!("Error validating token: \n{:#?}", err);
             return StatusCode::UNAUTHORIZED;
         })?;
-    println!("verified: claims {:?}", claims);
-    req.extensions_mut().insert(claims);
+    println!("adding claims: {:#?}", claims);
+    req.extensions_mut().insert(Arc::new(claims));
+    println!("req extensions: {:#?}", req.extensions());
     Ok(next.run(req).await)
 }
+
+/*
+    pub async fn guard<T>(Request<T>, ) {
+    }
+*/

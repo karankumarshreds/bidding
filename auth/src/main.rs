@@ -3,6 +3,7 @@ mod models;
 mod middlewares;
 
 use std::sync::Arc;
+use std::env::var as env_var;
 use axum::{
     Router,
     Server,
@@ -11,13 +12,24 @@ use axum::{
 };
 
 use std::net::SocketAddr;
-use handlers::auth::{login_handle, test_handler};
+use handlers::auth::{login_handle, who_am_i};
 use models::user::{AppState, User};
 use middlewares::auth::with_auth;
+use dotenv;
 
-
+fn check_envs() -> Result<(), Box<dyn std::error::Error>> {
+    dotenv::dotenv().ok();
+    let vars = vec!["JWT_KEY"];
+    for v in vars {
+        dotenv::dotenv().ok();
+        std::env::var(v)?;
+    }
+    Ok(())
+}
 #[tokio::main]
 async fn main() {
+    check_envs().unwrap();
+
     let shared_state = Arc::new(
         AppState {
             users_set: User::new(),
@@ -25,9 +37,10 @@ async fn main() {
     );
                                   
     let app = Router::new()
-        .route("/login", post(login_handle))
-        .route("/test", get(test_handler))
+        .route("/who-am-i", get(who_am_i)) // with auth
         .route_layer(from_fn(with_auth))
+
+        .route("/login", post(login_handle)) // without auth
         .with_state(shared_state);
 
     let addr = SocketAddr::from(([127,0,0,1], 8000));
