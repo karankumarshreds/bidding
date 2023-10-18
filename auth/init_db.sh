@@ -4,6 +4,12 @@ set -x # be explicit
 set -e # exit if any step fails
 set -o pipefail # use the error code for the failed step
 
+if [ $1 = "--help" ]
+then
+    echo "use --init to create db, create and run the migrations"
+    exit 0 
+fi
+
 # check if the cli tools are installed
 if ! [ -x "$(which psql)" ]; then
     echo >&2 "Error: psql not installed"
@@ -35,9 +41,18 @@ done
 
 echo "Postgres up and running on ${DB_PORT}"
 export DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@localhost:${DB_PORT}/${DB_NAME}
-echo "exported the database url"
-echo $DATABASE_URL
-sqlx database create
+
+
+if [ $1 = "--help" ]
+then
+    sqlx database create
+    sqlx migrate add create_auth_table
+    sqlx migrate run
+    >&2 echo "Postgres has been migrated, ready to go!"
+else 
+    >&2 echo "No migrations were run, use --init to create new migrations"
+fi
+
 
 
 
