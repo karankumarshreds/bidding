@@ -38,6 +38,7 @@ async fn main() {
                                   
     let app = Router::new()
         .route("/who-am-i", get(who_am_i)) // with auth
+        .route("/new-bid", post())
         .route_layer(from_fn(with_auth))
 
         .route("/login", post(login_handle)) // without auth
@@ -45,7 +46,7 @@ async fn main() {
 
     let addr = SocketAddr::from(([127,0,0,1], 8000));
 
-    Server::bind(&addr)
+    Server::binds(&addr)
         .serve(app.into_make_service())
         .await
         .unwrap();

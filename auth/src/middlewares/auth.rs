@@ -21,6 +21,7 @@ pub async fn with_auth<B>(mut req: Request<B>, next: Next<B>) -> Result<Response
             println!("Error validating token: \n{:#?}", err);
             return StatusCode::UNAUTHORIZED;
         })?;
+
     println!("adding claims: {:#?}", claims);
     req.extensions_mut().insert(Arc::new(claims));
     println!("req extensions: {:#?}", req.extensions());
