@@ -4,6 +4,19 @@ set -x # be explicit
 set -e # exit if any step fails
 set -o pipefail # use the error code for the failed step
 
+# check if the cli tools are installed
+if ! [ -x "$(which psql)" ]; then
+    echo >&2 "Error: psql not installed"
+    exit 1
+fi
+if ! [ -x "$(which sqlx)" ]; then
+    echo >&2 "Error: sqlx not installed"
+    echo >&2 "Use:"
+    echo >&2 "cargo install --version=0.5.7 sqlx-cli --no-default-features --features postgres"
+    echo >&2 "to install"
+    exit 1
+fi
+
 DB_USER=${POSTGRES_USER:=postgres}
 DB_PASSWORD=${POSTGRESS_PASSWORD:=password}
 DB_NAME=${POSTGRES_DB:=bidding}
