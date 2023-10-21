@@ -43,10 +43,11 @@ echo "Postgres up and running on ${DB_PORT}"
 export DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@localhost:${DB_PORT}/${DB_NAME}
 
 
-if [ $1 = "--help" ]
+if [ $1 = "--init" ]
 then
     sqlx database create
     sqlx migrate add create_auth_table
+
     sqlx migrate run
     >&2 echo "Postgres has been migrated, ready to go!"
 else 

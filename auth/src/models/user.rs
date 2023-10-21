@@ -8,6 +8,17 @@ pub struct AppState {
 type UserId = String;
 type UsersSet = HashMap<UserId, User>;
 
+#[derive(serde::Deserialize, serde::Serialize)]
+pub struct LoginPayload {
+    pub username: String,
+    pub password: String,
+}
+
+#[derive(serde::Serialize)]
+pub struct LoginResponse {
+    pub token: String,
+}
+
 #[derive(serde::Serialize, Clone, Debug)]
 pub struct User {
     pub id: String,

@@ -13,18 +13,8 @@ use std::sync::Arc;
 use axum::extract::{State, Json};
 use axum::Extension;
 use axum::http::StatusCode;
-use crate::models::user::{AppState, User};
+use crate::models::user::{AppState, User, LoginPayload, LoginResponse};
 
-#[derive(serde::Deserialize)]
-pub struct LoginPayload {
-    pub username: String,
-    pub password: String,
-}
-
-#[derive(serde::Serialize)]
-pub struct LoginResponse {
-    pub token: String,
-}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Claims {

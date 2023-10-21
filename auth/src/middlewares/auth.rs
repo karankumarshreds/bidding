@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use crate::handlers::auth::validate_token;
+use crate::routes::validate_token;
 use axum::{
     http::{Request, header},
     response::Response,
