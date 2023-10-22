@@ -13,7 +13,7 @@ use std::sync::Arc;
 use axum::extract::{State, Json};
 use axum::Extension;
 use axum::http::StatusCode;
-use crate::models::user::{AppState, User, LoginPayload, LoginResponse};
+use crate::models::user::{AppState, User, LoginPayload, LoginResponse, SignupPayload};
 
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -45,7 +45,14 @@ pub fn validate_token(token: &str, jwt_key: &str) -> Result<Claims, Box<dyn Erro
     return Ok(payload);
 }
 
-pub async fn login_handle(
+pub async fn sign_up(
+        State(state): State<Arc<AppState>>,
+        Json(login_payload): Json<SignupPayload>,
+    ) -> Result<Json<LoginResponse>, StatusCode> {
+    todo!("make call to database")
+}
+
+pub async fn login(
         State(state): State<Arc<AppState>>, 
         Json(login_payload): Json<LoginPayload>,
     ) -> Result<Json<LoginResponse>, StatusCode> {

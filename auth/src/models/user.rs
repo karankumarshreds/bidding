@@ -1,8 +1,10 @@
 use std::collections::HashMap;
+use sqlx::PgConnection;
 
-#[derive(Clone)]
+// #[derive(Clone)]
 pub struct AppState {
     pub users_set: HashMap<String, User>,
+    pub db_connection: PgConnection,
 }
 
 type UserId = String;
@@ -13,6 +15,13 @@ pub struct LoginPayload {
     pub username: String,
     pub password: String,
 }
+
+#[derive(serde::Deserialize, serde::Serialize)]
+pub struct SignupPayload {
+    pub username: String,
+    pub password: String,
+}
+
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct LoginResponse {

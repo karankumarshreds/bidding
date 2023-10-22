@@ -10,12 +10,11 @@ use axum::{
     routing::{get, post},
     middleware::from_fn,
 };
-// use tokio::net::TcpListener;
 use std::net::TcpListener;
-use std::net::SocketAddr;
-use routes::{login_handle, who_am_i};
+use routes::{login, sign_up, who_am_i};
 use models::user::{AppState, User};
 use middlewares::auth::with_auth;
+use sqlx::{Connection, PgConnection};
 
 
 fn check_envs() -> Result<(), Box<dyn std::error::Error>> {
@@ -29,21 +28,25 @@ fn check_envs() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub async fn run(tcp_listener: TcpListener) -> std::io::Result<()> {
-    let config = configuration::get_configuration().unwrap();
-    println!("{}", config.database.connection_string());
     check_envs().unwrap();
-
+    let config = configuration::get_configuration().unwrap();
+    let db_connection = PgConnection::connect(&config.database.connection_string())
+        .await
+        .expect("Failed to connect to database");
     let shared_state = Arc::new(
         AppState {
             users_set: User::new(),
+            db_connection,
         }
     );
                                   
     let app = Router::new()
+        // with auth
         .route("/who-am-i", get(who_am_i))
         .route_layer(from_fn(with_auth))
         // without auth
-        .route("/login", post(login_handle))
+        .route("/login", post(login))
+        .route("/signup", post(sign_up))
         .with_state(shared_state);
     Server::from_tcp(tcp_listener)
         .unwrap()
