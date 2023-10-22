@@ -9,6 +9,7 @@ use axum::{
     Server,
     routing::{get, post},
     middleware::from_fn,
+    routing::IntoMakeService,
 };
 
 use std::net::SocketAddr;

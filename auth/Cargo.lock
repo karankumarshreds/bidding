@@ -72,6 +72,7 @@ dependencies = [
  "config",
  "dotenv",
  "env-file-reader",
+ "hyper",
  "jsonwebtoken",
  "reqwest",
  "serde",
