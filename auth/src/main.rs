@@ -1,11 +1,9 @@
-// mod routes;
-// mod models;
-// mod middlewares;
-//
 use auth::run;
+use auth::configuration;
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    run().await
+    let port = configuration::get_configuration().unwrap().application_port;
+    run(port).await
 }
 

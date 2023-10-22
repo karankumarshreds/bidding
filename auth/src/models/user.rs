@@ -14,12 +14,12 @@ pub struct LoginPayload {
     pub password: String,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct LoginResponse {
     pub token: String,
 }
 
-#[derive(serde::Serialize, Clone, Debug)]
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub struct User {
     pub id: String,
     pub username: String,

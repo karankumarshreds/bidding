@@ -9,7 +9,6 @@ use axum::{
     Server,
     routing::{get, post},
     middleware::from_fn,
-    routing::IntoMakeService,
 };
 
 use std::net::SocketAddr;
@@ -28,7 +27,7 @@ fn check_envs() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub async fn run() -> std::io::Result<()> {
+pub async fn run(port: u16) -> std::io::Result<()> {
     let config = configuration::get_configuration().unwrap();
     println!("{}", config.database.connection_string());
     check_envs().unwrap();
@@ -45,8 +44,7 @@ pub async fn run() -> std::io::Result<()> {
         // without auth
         .route("/login", post(login_handle))
         .with_state(shared_state);
-
-    let addr = SocketAddr::from(([127,0,0,1], 8000));
+    let addr = SocketAddr::from(([127,0,0,1], port));
 
     Server::bind(&addr)
         .serve(app.into_make_service())
