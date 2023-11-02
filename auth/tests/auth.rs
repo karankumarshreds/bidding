@@ -1,19 +1,25 @@
 use tokio;
 #[allow(unused)]
 use tower::ServiceExt;
-use auth::models::user::{LoginPayload, LoginResponse, User};
+use sqlx::{Connection, PgConnection};
+use auth::models::user::{LoginPayload, LoginResponse, User, SignupPayload};
 use auth::run;
+use auth::configuration;
 
 #[tokio::test]
-async fn sign_up() {
-    //let (handle, port) = spawn_app(); // the task is spawned as toon as you await it
-                       // and it runs concurrently with the execution
-    let port = spawn_app();
-
+async fn sign_in() {
+    let port = spawn_app();// it runs concurrently with the execution
     let response = login(port).await;
     println!("response.status(): {}", response.status());
     assert_eq!(response.status(), 200);
     assert_ne!(response.content_length(), Some(0));
+}
+
+#[tokio::test]
+async fn test_db() {
+    let config = configuration::get_configuration().expect("cannot get db config");
+    let connection = PgConnection::connect(&config.database.connection_string()).await;
+    assert!(connection.is_ok());
 }
 
 #[tokio::test]
@@ -32,6 +38,43 @@ async fn who_am_i() {
         .await
         .unwrap();
     assert_eq!(user.id, "1");
+}
+
+#[tokio::test]
+async fn signup() {
+    let port = spawn_app();
+    let client = reqwest::Client::new();
+    let payload = SignupPayload{
+            username: String::from("user_a"),
+            password: String::from("password"),
+        };
+    let connection_string = configuration::get_configuration()
+        .expect("Cannot load config")
+        .database
+        .connection_string();
+    let mut connection = PgConnection::connect(&connection_string).await.expect("Failed to connect to PG");
+    /*
+    let response = client
+        .post(format!("http://localhost:{}/signup", port))
+        .json(&payload)
+        .send()
+        .await
+        .expect("Failed to execute request");
+    assert_eq!(response.status(), 200);
+    let token_response = response.json::<LoginResponse>()
+        .await
+        .expect("cannot parse token from signup response");
+    assert!(token_response.token.len() > 10);
+    */
+    let user = sqlx::query!("select * from users where username=$1", payload.username)
+        .fetch_one(&mut connection)
+        .await
+        .expect("Failed to fetch user");
+    assert_eq!(user.password, payload.password);
+    sqlx::query!("delete from users where username=$1", payload.username)
+        .execute(&mut connection)
+        .await
+        .expect("Failed to cleanup");
 }
 
 // This makes sure the test suite is totally decoupled 

@@ -3,7 +3,7 @@ pub mod routes;
 pub mod models;
 pub mod middlewares;
 
-use std::sync::Arc;
+use std::sync::{Arc,Mutex};
 use axum::{
     Router,
     Server,
@@ -11,32 +11,24 @@ use axum::{
     middleware::from_fn,
 };
 use std::net::TcpListener;
-use routes::{login, sign_up, who_am_i};
-use models::user::{AppState, User};
+use routes::{login, who_am_i, sign_up};
+use models::user::{AppState, User, JWTSettings};
 use middlewares::auth::with_auth;
 use sqlx::{Connection, PgConnection};
 
-
-fn check_envs() -> Result<(), Box<dyn std::error::Error>> {
-    dotenv::dotenv().ok();
-    let vars = vec!["JWT_KEY"];
-    for v in vars {
-        dotenv::dotenv().ok();
-        std::env::var(v)?;
-    }
-    Ok(())
-}
-
 pub async fn run(tcp_listener: TcpListener) -> std::io::Result<()> {
-    check_envs().unwrap();
     let config = configuration::get_configuration().unwrap();
-    let db_connection = PgConnection::connect(&config.database.connection_string())
+    let db_connection = Arc::new(Mutex::new(PgConnection::connect(&config.database.connection_string())
         .await
-        .expect("Failed to connect to database");
+        .expect("Failed to connect to database")));
     let shared_state = Arc::new(
         AppState {
             users_set: User::new(),
             db_connection,
+            jwt: JWTSettings {
+                secret: config.jwt.secret,
+                expiration: config.jwt.expiration,
+            }
         }
     );
                                   

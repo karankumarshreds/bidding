@@ -2,6 +2,7 @@
 pub struct Settings {
     pub database: DatabaseSettings,
     pub application_port: u16,
+    pub jwt: JwtSettings,
 }
 
 impl TryFrom<config::Config> for Settings {
@@ -9,10 +10,12 @@ impl TryFrom<config::Config> for Settings {
     fn try_from(value: config::Config) -> Result<Self, Self::Error> {
         let application_port = value.get::<u16>("application_port")?;
         let database = value.get::<DatabaseSettings>("database")?;
+        let jwt = value.get::<JwtSettings>("jwt")?;
         Ok(
             Settings {
                 application_port,
                 database,
+                jwt,
             }
         )
     }
@@ -25,6 +28,12 @@ pub struct DatabaseSettings {
     pub db_name: String,
     pub host: String,
     pub port: u16,
+}
+
+#[derive(serde::Deserialize, Debug)]
+pub struct JwtSettings {
+    pub secret: String,
+    pub expiration: i32,
 }
 
 impl DatabaseSettings {

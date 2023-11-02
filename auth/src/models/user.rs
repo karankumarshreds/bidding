@@ -1,10 +1,17 @@
+use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 use sqlx::PgConnection;
 
 // #[derive(Clone)]
 pub struct AppState {
     pub users_set: HashMap<String, User>,
-    pub db_connection: PgConnection,
+    pub db_connection: Arc<Mutex<PgConnection>>,
+    pub jwt: JWTSettings,
+}
+
+pub struct JWTSettings {
+        pub secret: String,
+        pub expiration: i32,
 }
 
 type UserId = String;

@@ -6,8 +6,12 @@ use axum::{
     http::StatusCode,
     middleware::Next,
 };
+use crate::configuration;
 
-pub async fn with_auth<B>(mut req: Request<B>, next: Next<B>) -> Result<Response, StatusCode> {
+pub async fn with_auth<B>(
+        mut req: Request<B>, next: Next<B>,
+    ) -> Result<Response, StatusCode> {
+    let jwt_secret = configuration::get_configuration().unwrap().jwt.secret;
     let auth_header = req.headers()
         .get(header::AUTHORIZATION)
         .and_then(|h| {
@@ -15,8 +19,7 @@ pub async fn with_auth<B>(mut req: Request<B>, next: Next<B>) -> Result<Response
             return h.to_str().ok()
         })
         .ok_or(StatusCode::UNAUTHORIZED)?;
-
-    let claims = validate_token(auth_header, std::env::var("JWT_KEY").unwrap().as_ref())
+    let claims = validate_token(auth_header, &jwt_secret)
         .map_err(|err|{
             println!("Error validating token: \n{:#?}", err);
             return StatusCode::UNAUTHORIZED;
@@ -28,7 +31,3 @@ pub async fn with_auth<B>(mut req: Request<B>, next: Next<B>) -> Result<Response
     Ok(next.run(req).await)
 }
 
-/*
-    pub async fn guard<T>(Request<T>, ) {
-    }
-*/
