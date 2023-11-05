@@ -1,5 +1,6 @@
 use std::error::Error;
 use serde::{Serialize, Deserialize};
+use sqlx::{PgPool, Arguments, Connection, Pool, Postgres};
 use jsonwebtoken::{
     encode,
     Header,
@@ -13,8 +14,7 @@ use std::sync::Arc;
 use axum::extract::{State, Json};
 use axum::Extension;
 use axum::http::StatusCode;
-use crate::models::user::{AppState, LoginPayload, LoginResponse, SignupPayload};
-use crate::configuration::get_configuration;
+use crate::models::user::{AppState, LoginPayload, LoginResponse, SignupPayload, WhoAmIResponse};
 
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -99,12 +99,8 @@ pub async fn login(
         State(state): State<Arc<AppState>>, 
         Json(login_payload): Json<LoginPayload>,
     ) -> Result<Json<LoginResponse>, StatusCode> {
-    let mut conn = state.db_connection.acquire()
-        .await
-        .map_err(|err| {
-            eprintln!("Unable to connect to pool: {}", err);
-            return StatusCode::INTERNAL_SERVER_ERROR;
-        })?;
+    let mut conn = state.connect_db().await?;
+    //let mut conn = state.db_connection.acquire().await.unwrap();
     let user = sqlx::query!(
             "select id, username from users where username=$1 and password=$2",
             login_payload.username,
@@ -130,15 +126,11 @@ pub async fn login(
     return Ok(Json(LoginResponse{token}));
 }
 
-/*
 pub async fn who_am_i(
-        State(state): State<Arc<AppState>>,
+        State(_state): State<Arc<AppState>>,
         Extension(claims): Extension<Arc<Claims>>,
-    ) -> Result<Json<User>, StatusCode> {
-    println!("got the claims {:#?}", claims);
-    let users_set = &state.users_set;
-    let user = users_set.get(&claims.user_id)
-        .ok_or(StatusCode::UNAUTHORIZED)?;
-    return Ok(Json(user.clone()));
+    ) -> Result<Json<WhoAmIResponse>, StatusCode> {
+    let id = claims.user_id.parse::<i32>().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let username = claims.username.clone();
+    return Ok(Json(WhoAmIResponse{id, username}));
 }
-*/

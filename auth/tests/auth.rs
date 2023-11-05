@@ -2,7 +2,7 @@ use tokio;
 #[allow(unused)]
 use tower::ServiceExt;
 use sqlx::{Connection, PgConnection};
-use auth::models::user::{LoginPayload, LoginResponse, User, SignupPayload};
+use auth::models::user::{LoginPayload,LoginResponse,SignupPayload,WhoAmIResponse};
 use auth::run;
 use auth::configuration;
 
@@ -34,10 +34,10 @@ async fn who_am_i() {
         .send()
         .await
         .expect("Failed to execute request")
-        .json::<User>()
+        .json::<WhoAmIResponse>()
         .await
         .unwrap();
-    assert_eq!(user.id, "1");
+    assert_eq!(user.id, 2);
 }
 
 #[tokio::test]
@@ -53,7 +53,6 @@ async fn signup() {
         .database
         .connection_string();
     let mut connection = PgConnection::connect(&connection_string).await.expect("Failed to connect to PG");
-    /*
     let response = client
         .post(format!("http://localhost:{}/signup", port))
         .json(&payload)
@@ -65,7 +64,6 @@ async fn signup() {
         .await
         .expect("cannot parse token from signup response");
     assert!(token_response.token.len() > 10);
-    */
     let user = sqlx::query!("select * from users where username=$1", payload.username)
         .fetch_one(&mut connection)
         .await

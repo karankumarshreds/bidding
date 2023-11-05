@@ -11,8 +11,7 @@ use axum::{
     middleware::from_fn,
 };
 use std::net::TcpListener;
-// use routes::{login, who_am_i, sign_up};
-use routes::{sign_up,login};
+use routes::{sign_up,login,who_am_i};
 use models::user::{AppState,JWTSettings};
 use middlewares::auth::with_auth;
 use sqlx::PgPool;
@@ -33,8 +32,8 @@ pub async fn run(tcp_listener: TcpListener) -> std::io::Result<()> {
                                   
     let app = Router::new()
         // with auth
-        //.route("/who-am-i", get(who_am_i))
-        //.route_layer(from_fn(with_auth))
+        .route("/who-am-i", get(who_am_i))
+        .route_layer(from_fn(with_auth))
         // without auth
         .route("/login", post(login))
         .route("/signup", post(sign_up))
