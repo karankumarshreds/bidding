@@ -1,6 +1,6 @@
 use std::error::Error;
 use serde::{Serialize, Deserialize};
-use sqlx::{PgPool, Arguments, Connection, Pool, Postgres};
+// use sqlx::{PgPool, Arguments, Connection, Pool, Postgres};
 use jsonwebtoken::{
     encode,
     Header,
@@ -51,14 +51,9 @@ pub async fn sign_up(
         Json(signup_payload): Json<SignupPayload>,
     ) -> Result<Json<LoginResponse>, StatusCode> {
     // check if the user with same email is there
-    let mut connection = state.db_connection.acquire()
-        .await
-        .map_err(|err| {
-            eprintln!("Unable to connect to pool: {}", err);
-            return StatusCode::INTERNAL_SERVER_ERROR;
-        })?;
+    let conn = &state.db_connection;
     let user = sqlx::query!("select * from users where username=$1", signup_payload.username)
-        .fetch_optional(&mut connection)
+        .fetch_optional(conn)
         .await
         .map_err(|err| {
             println!("ERROR: Unable to execute the query {:?}", err);
@@ -72,14 +67,14 @@ pub async fn sign_up(
 
     println!("creating a new user");
     sqlx::query!("insert into users(username, password) values($1, $2)", signup_payload.username, signup_payload.password)
-        .execute(&mut connection)
+        .execute(conn)
         .await
         .map_err(|err| {
             println!("ERROR: failed to create new user for: {}\n{}",signup_payload.username, err);
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
     let user = sqlx::query!("select id, username from users where username=$1", signup_payload.username)
-        .fetch_one(&mut connection)
+        .fetch_one(conn)
         .await
         .map_err(|err| {
             println!("ERROR: failed to fetch user: {} \n {:#?}", signup_payload.username, err);
@@ -99,14 +94,13 @@ pub async fn login(
         State(state): State<Arc<AppState>>, 
         Json(login_payload): Json<LoginPayload>,
     ) -> Result<Json<LoginResponse>, StatusCode> {
-    let mut conn = state.connect_db().await?;
-    //let mut conn = state.db_connection.acquire().await.unwrap();
+    let conn = &state.db_connection;
     let user = sqlx::query!(
             "select id, username from users where username=$1 and password=$2",
             login_payload.username,
             login_payload.password,
         )
-        .fetch_optional(&mut conn)
+        .fetch_optional(conn)
         .await
         .map_err(|err| {
             println!("ERROR: unable to fetch user from db: {:#?}", err);

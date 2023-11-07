@@ -1,7 +1,10 @@
+/*
 use std::error::Error;
 use axum::http::StatusCode;
-use sqlx::{PgPool, Arguments, Connection, Pool, Postgres};
-use sqlx::pool::PoolConnection;
+*/
+// use sqlx::{PgPool, Arguments, Connection, Pool, Postgres};
+// use sqlx::pool::PoolConnection;
+use sqlx::PgPool;
 
 // #[derive(Clone)]
 pub struct AppState {
@@ -9,6 +12,7 @@ pub struct AppState {
     pub jwt: JWTSettings,
 }
 
+/*
 impl AppState {
     pub async fn connect_db(&self) -> Result<PoolConnection<Postgres>, StatusCode> {
         self.db_connection.acquire().await.map_err(|err| {
@@ -17,6 +21,7 @@ impl AppState {
         })
     }
 }
+*/
 
 pub struct JWTSettings {
         pub secret: String,
